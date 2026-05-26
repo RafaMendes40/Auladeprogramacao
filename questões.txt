@@ -5,40 +5,80 @@ Projeto: Sistema Academico
 
 1. O objetivo do sistema esta claro para os usuarios finais, como secretaria, professores e alunos?
 
+Sim. A documentação define claramente que se trata de um protótipo de sistema acadêmico em Python. Ele representa alunos, professores e disciplinas, com uma estrutura centralizada para cadastrar e relacionar essas informações. A interface web reflete isso através de um menu de navegação simples e direto.
+
 2. Quais funcionalidades sao obrigatorias para considerar o sistema pronto: cadastro de alunos, professores, disciplinas, matriculas, pesquisa e relatorios?
+
+Todas essas funcionalidades são tratadas como obrigatórias e já estão implementadas. A interface web possui telas dedicadas para cadastrar e listar alunos, professores, disciplinas e gerenciar matrículas. Além disso, a tela inicial conta com botões para baixar os relatórios em formato JSON e PDF.
 
 3. Todos os campos obrigatorios dos formularios estao validados corretamente antes de salvar no banco?
 
+Sim. Nas telas HTML, as tags <input> e <select> utilizam o atributo HTML5 required para impedir envios vazios (ex: templates/alunos.html). Há também restrições de tipo, como em carga_horaria, que exige type="number" min="1". No back-end (app.py), o uso da função .strip() garante que espaços em branco não sejam computados sozinhos antes de salvar no banco de dados.
+
 4. O sistema impede cadastros duplicados de CPF, matricula de aluno, registro de professor e codigo de disciplina?
+
+Sim. O banco de dados (schema.sql) define restrições UNIQUE para as colunas cpf, matrícula, registro e código. No arquivo app.py, essas falhas geram um erro (IntegrityError), que o sistema captura e converte em mensagens amigáveis informando aos usuários que o dado já está cadastrado.
 
 5. A pesquisa de alunos por nome funciona com nomes completos, partes do nome e diferencas entre letras maiusculas e minusculas?
 
+Sim. Em app.py (na rota /alunos), o código SQL utiliza a cláusula WHERE LOWER(a.nome) LIKE LOWER(%s) passando "%{pesquisa}%". Isso assegura que buscas por trechos do nome sejam bem-sucedidas ignorando maiúsculas ou minúsculas.
+
 6. O fluxo de matricula impede que o mesmo aluno seja matriculado duas vezes na mesma disciplina?
+
+Sim. O arquivo schema.sql aplica a restrição UNIQUE KEY uk_aluno_disciplina (aluno_id, disciplina_id). Além disso, a rota de matrículas em app.py realiza um SELECT prévio para checar se já existe uma matrícula com ativo = 1, emitindo uma mensagem bloqueando a duplicidade.
 
 7. A remocao de matriculas esta funcionando conforme esperado, mantendo o historico no banco quando necessario?
 
+Sim, o comportamento foi alterado de um "DELETE" tradicional para uma "remoção lógica". A matrícula recebe o valor ativo = 0 e marca a data/hora em removido_em, deixando de aparecer na tela, mas com o registro sendo mantido intacto no banco de dados.
+
 8. O metodo de remover dados do aluno em Aluno.py esta coerente com a regra de negocio definida para o projeto?
+
+Sim. O código desse método desfaz adequadamente a associação percorrendo as disciplinas, removendo o aluno da lista de cada uma, e então limpa o nome, CPF, matrícula, curso e a lista local de disciplinas.
 
 9. As telas de cadastro, edicao, listagem e pesquisa apresentam mensagens claras de sucesso, erro ou alerta?
 
+Sim. O sistema utiliza a função flash do Flask (app.py) e componentes visuais para notificar os usuários. A documentação indica que foram configuradas mensagens amigáveis cobrindo erros de duplicidade, sucessos e falhas de conexão. Elas ganham cores diferentes dependendo da gravidade, graças às classes css .message, .success e .warning.
+
 10. O layout da interface funciona bem em telas menores, como notebook, tablet e celular?
+
+Sim. O arquivo static/styles.css possui media queries (@media (max-width: 820px)) que adaptam a tela para colunas únicas (1fr) em dispositivos menores. Elementos de dados extensos, como as tabelas, estão envoltos pela classe .table-wrap que possui overflow-x: auto, garantindo que nada quebre a tela em celulares.
 
 11. Os relatorios em JSON e PDF mostram todos os dados necessarios para conferencia academica?
 
+Sim. Em relatorios.py e app.py, todos os dados agregados das tabelas base são incluídos (nome, CPF, matrículas, situação, registros e carga horária), formatados e separados por categorias (Alunos, Professores, Disciplinas, Matrículas), montando uma estrutura ideal de conferência.
+
 12. O banco MySQL pode ser criado corretamente a partir do arquivo schema.sql em um ambiente novo?
+
+Sim. O arquivo executa comandos seguros, incluindo CREATE DATABASE IF NOT EXISTS sistema_academico, a criação completa das 4 tabelas relacionais em chaves estrangeiras com ações ON DELETE CASCADE / SET NULL, e também utiliza INSERT IGNORE para carregar dados iniciais de teste.
 
 13. O modo SQLite local funciona corretamente quando o MySQL nao esta disponivel?
 
+Sim. No db.py, a função _ensure_engine() tenta conectar ao MySQL; se falhar e a variável MYSQL_REQUIRED não estiver forçando o ambiente, o sistema cria automaticamente o banco de fallback chamado sistema_academico.sqlite3 carregando a mesma estrutura básica, permitindo usar a interface sem quebrar o app.
+
 14. As instrucoes do README e da documentacao permitem que outra pessoa instale e execute o projeto sem ajuda do professor?
+
+Sim. O README.md é sucinto e direto, cobrindo os quatro passos essenciais: comandos de criação do banco, uso do arquivo requirements.txt para dependências, variáveis de ambiente configuráveis e o comando de inicialização.
 
 15. Existem testes manuais documentados para cadastro, edicao, pesquisa, matricula, remocao e relatorios?
 
+Sim. A documentação possui duas listagens para isso. A seção de validações indica verificações de navegação entre as telas, remoção lógica e exportação de relatórios. A fase de deploy conta com outro checklist extenso recomendando refazer todas as etapas desde o cadastro até a verificação do banco na nuvem.
+
 16. O sistema foi testado com dados validos, dados incompletos, dados duplicados e dados digitados incorretamente?
+
+Os requisitos tratam de duplicidades enviando mensagens apropriadas de erro e validam formulários incompletos usando required e .strip(). O sistema possui proteção contra usos inadequados básicos, mas a documentação não aborda a criação de testes de automação profunda para regras avançadas como a verificação lógica dos dígitos do CPF no back-end.
 
 17. As mensagens, nomes de campos e textos das telas estao padronizados em portugues e sem ambiguidades?
 
+Sim, todos os cabeçalhos (<th>), labels dos formulários e os textos da página inicial exibem um português padrão limpo e as variáveis seguem uma convenção de nomenclatura clara no banco de dados e nos retornos visuais.
+
 18. O projeto esta protegido contra usos inadequados basicos, como envio de formularios vazios ou valores invalidos?
+
+Sim, o projeto garante validação nos formulários HTML e evita que textos vazios ou preenchidos apenas com barra de espaço passem como válidos através do bloqueio por .strip() na submissão de rotas pelo Flask. Restrições de chaves e dados numéricos evitam valores absurdos.
 
 19. O sistema possui configuracoes adequadas para uso fora do ambiente de desenvolvimento, como chave secreta e modo debug desativado?
 
+A arquitetura está preparada para isso. O uso da FLASK_SECRET_KEY busca a variável no ambiente (os.getenv), o que atende às práticas de segurança para chaves secretas. O documento também prevê o uso do Gunicorn para a execução externa, o que substitui a chamada direta de app.run(debug=True).
+
 20. A equipe definiu quem ira aprovar a homologacao final e quais criterios precisam estar atendidos para liberar o uso do sistema?
+
+A documentação apresenta os critérios na forma do checklist de validações (questões.txt e itens pós-deploy), validando os requisitos mínimos. Não são mencionados, entretanto, os nomes específicos das pessoas da equipe ou da secretaria que efetuarão a assinatura da aprovação final na documentação técnica.
